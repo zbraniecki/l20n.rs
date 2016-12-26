@@ -33,7 +33,7 @@ impl Serialize for Keyword {
             Some(ref v) => {
                 try!(serializer.serialize_map_key(&mut map, "ns"));
                 try!(serializer.serialize_map_value(&mut map, v));
-            }
+            },
             None => {}
         }
         serializer.serialize_map_end(map)
@@ -59,7 +59,7 @@ impl Serialize for Number {
 #[derive(Debug, PartialEq)]
 pub enum MemberKey {
     Keyword(Keyword),
-    Number(Number),
+    Number(Number)
 }
 
 impl Serialize for MemberKey {
@@ -95,11 +95,11 @@ impl Deserialize for MemberKey {
                         "name" => {
                             let val: String = try!(visitor.visit_value());
                             v = Some(val);
-                        }
+                        },
                         "type" => {
                             let val: String = try!(visitor.visit_value());
                             t = Some(val);
-                        }
+                        },
                         "ns" => {
                             let val: String = try!(visitor.visit_value());
                             ns = Some(val);
@@ -110,19 +110,15 @@ impl Deserialize for MemberKey {
                 try!(visitor.end());
 
                 match t {
-                    Some(ch) => {
-                        match ch.as_str() {
-                            "kw" => {
-                                Ok(MemberKey::Keyword(Keyword {
-                                    name: v.unwrap(),
-                                    ns: ns,
-                                }))
-                            }
-                            "num" => Ok(MemberKey::Number(Number(v.unwrap()))),
-                            _ => panic!(),
-                        }
-                    }
-                    None => panic!(),
+                    Some(ch) => match ch.as_str() {
+                        "kw" => Ok(MemberKey::Keyword(Keyword {
+                            name: v.unwrap(),
+                            ns: ns
+                        })),
+                        "num" => Ok(MemberKey::Number(Number(v.unwrap()))),
+                        _ => panic!()
+                    },
+                    None => panic!()
                 }
             }
         }
@@ -152,17 +148,15 @@ impl Serialize for Value {
         where S: Serializer
     {
         match *self {
-            Value::Pattern(ref v) => {
-                match v {
-                    &Pattern::Simple(ref v) => v.serialize(serializer),
-                    &Pattern::Complex(ref v) => {
-                        let mut map = serializer.serialize_map(Some(1)).unwrap();
-                        try!(serializer.serialize_map_key(&mut map, "val"));
-                        try!(serializer.serialize_map_value(&mut map, &v));
-                        serializer.serialize_map_end(map)
-                    }
-                }
-            }
+            Value::Pattern(ref v) => match v {
+                &Pattern::Simple(ref v) => v.serialize(serializer),
+                &Pattern::Complex(ref v) => {
+                    let mut map = serializer.serialize_map(Some(1)).unwrap();
+                    try!(serializer.serialize_map_key(&mut map, "val"));
+                    try!(serializer.serialize_map_value(&mut map, &v));
+                    serializer.serialize_map_end(map)
+                },
+            },
             Value::ComplexValue { ref val, ref traits, ref def } => {
                 let mut num_fields = 1;
                 if !val.is_none() {
@@ -254,14 +248,17 @@ pub enum Expression {
     Number(Number),
     CallExpression {
         name: Box<Expression>,
-        args: Vec<Expression>,
+        args: Vec<Expression>
     },
     SelectExpression {
         exp: Box<Expression>,
         vars: Vec<Member>,
-        def: Option<i8>,
+        def: Option<i8>
     },
-    KeyValueArgument { name: String, val: Box<Expression> },
+    KeyValueArgument {
+        name: String,
+        val: Box<Expression>
+    },
     Member {
         obj: Box<Expression>,
         key: MemberKey,
@@ -282,7 +279,7 @@ impl Serialize for Expression {
                 try!(serializer.serialize_map_key(&mut map, "name"));
                 try!(serializer.serialize_map_value(&mut map, name));
                 serializer.serialize_map_end(map)
-            }
+            },
             &Expression::EntityReference(ref name) => {
                 let mut map = serializer.serialize_map(Some(2)).unwrap();
                 try!(serializer.serialize_map_key(&mut map, "type"));
@@ -290,9 +287,11 @@ impl Serialize for Expression {
                 try!(serializer.serialize_map_key(&mut map, "name"));
                 try!(serializer.serialize_map_value(&mut map, name));
                 serializer.serialize_map_end(map)
-            }
-            &Expression::Number(ref val) => Number::serialize(val, serializer),
-            &Expression::SelectExpression { ref exp, ref vars, .. } => {
+            },
+            &Expression::Number(ref val) => {
+                Number::serialize(val, serializer)
+            },
+            &Expression::SelectExpression { ref exp, ref vars, ..} => {
                 let mut map = serializer.serialize_map(Some(3)).unwrap();
                 try!(serializer.serialize_map_key(&mut map, "type"));
                 try!(serializer.serialize_map_value(&mut map, "sel"));
@@ -301,8 +300,8 @@ impl Serialize for Expression {
                 try!(serializer.serialize_map_key(&mut map, "vars"));
                 try!(serializer.serialize_map_value(&mut map, vars));
                 serializer.serialize_map_end(map)
-            }
-            &Expression::CallExpression { ref name, ref args } => {
+            },
+            &Expression::CallExpression { ref name, ref args} => {
                 let mut map = serializer.serialize_map(Some(3)).unwrap();
                 try!(serializer.serialize_map_key(&mut map, "type"));
                 try!(serializer.serialize_map_value(&mut map, "call"));
@@ -311,8 +310,8 @@ impl Serialize for Expression {
                 try!(serializer.serialize_map_key(&mut map, "args"));
                 try!(serializer.serialize_map_value(&mut map, args));
                 serializer.serialize_map_end(map)
-            }
-            &Expression::KeyValueArgument { ref name, ref val } => {
+            },
+            &Expression::KeyValueArgument { ref name, ref val} => {
                 let mut map = serializer.serialize_map(Some(3)).unwrap();
                 try!(serializer.serialize_map_key(&mut map, "type"));
                 try!(serializer.serialize_map_value(&mut map, "kv"));
@@ -321,8 +320,8 @@ impl Serialize for Expression {
                 try!(serializer.serialize_map_key(&mut map, "val"));
                 try!(serializer.serialize_map_value(&mut map, val));
                 serializer.serialize_map_end(map)
-            }
-            &Expression::Member { ref obj, ref key } => {
+            },
+            &Expression::Member { ref obj, ref key} => {
                 let mut map = serializer.serialize_map(Some(3)).unwrap();
                 try!(serializer.serialize_map_key(&mut map, "type"));
                 try!(serializer.serialize_map_value(&mut map, "mem"));
@@ -331,7 +330,7 @@ impl Serialize for Expression {
                 try!(serializer.serialize_map_key(&mut map, "key"));
                 try!(serializer.serialize_map_value(&mut map, key));
                 serializer.serialize_map_end(map)
-            }
+            },
             &Expression::FunctionCall(ref name) => {
                 let mut map = serializer.serialize_map(Some(2)).unwrap();
                 try!(serializer.serialize_map_key(&mut map, "type"));
@@ -339,8 +338,10 @@ impl Serialize for Expression {
                 try!(serializer.serialize_map_key(&mut map, "name"));
                 try!(serializer.serialize_map_value(&mut map, name));
                 serializer.serialize_map_end(map)
+            },
+            &Expression::Pattern(ref val) => {
+                serializer.serialize_str(val)
             }
-            &Expression::Pattern(ref val) => serializer.serialize_str(val),
         }
     }
 }
@@ -440,7 +441,7 @@ impl Deserialize for Expression {
                         "val" => val = Some(visitor.visit_value()?),
                         "obj" => obj = Some(visitor.visit_value()?),
                         "key" => k = Some(visitor.visit_value()?),
-                        _ => {}
+                        _ => {},
                     }
                 }
                 visitor.end()?;
@@ -453,28 +454,24 @@ impl Deserialize for Expression {
                 match t.as_str() {
                     "ext" => {
                         let name = match name {
-                            Some(name) => {
-                                match name {
-                                    ExpressionName::String(v) => v,
-                                    ExpressionName::Expression(_) => panic!(),
-                                }
-                            }
+                            Some(name) => match name {
+                                ExpressionName::String(v) => v,
+                                ExpressionName::Expression(_) => panic!(),
+                            },
                             None => visitor.missing_field("name")?,
                         };
                         Ok(Expression::ExternalArgument(name))
-                    }
+                    },
                     "ref" => {
                         let name = match name {
-                            Some(name) => {
-                                match name {
-                                    ExpressionName::String(v) => v,
-                                    ExpressionName::Expression(_) => panic!(),
-                                }
-                            }
+                            Some(name) => match name {
+                                ExpressionName::String(v) => v,
+                                ExpressionName::Expression(_) => panic!(),
+                            },
                             None => visitor.missing_field("name")?,
                         };
                         Ok(Expression::EntityReference(name))
-                    }
+                    },
                     "sel" => {
                         let exp = match exp {
                             Some(exp) => exp,
@@ -484,79 +481,71 @@ impl Deserialize for Expression {
                             Some(vars) => vars,
                             None => visitor.missing_field("vars")?,
                         };
-                        Ok(Expression::SelectExpression {
-                            exp: Box::new(exp),
+                        Ok(Expression::SelectExpression{
+                            exp: Box::new(exp), 
                             vars: vars,
-                            def: None,
+                            def: None
                         })
-                    }
+                    },
                     "call" => {
                         let name = match name {
-                            Some(name) => {
-                                match name {
-                                    ExpressionName::Expression(v) => v,
-                                    ExpressionName::String(_) => panic!(),
-                                }
-                            }
+                            Some(name) => match name {
+                                ExpressionName::Expression(v) => v,
+                                ExpressionName::String(_) => panic!(),
+                            },
                             None => visitor.missing_field("name")?,
                         };
                         let args = match args {
                             Some(args) => args,
                             None => visitor.missing_field("args")?,
                         };
-                        Ok(Expression::CallExpression {
-                            name: Box::new(name),
+                        Ok(Expression::CallExpression{
+                            name: Box::new(name), 
                             args: args,
                         })
-                    }
+                    },
                     "fun" => {
                         let name = match name {
-                            Some(name) => {
-                                match name {
-                                    ExpressionName::String(v) => v,
-                                    ExpressionName::Expression(_) => panic!(),
-                                }
-                            }
+                            Some(name) => match name {
+                                ExpressionName::String(v) => v,
+                                ExpressionName::Expression(_) => panic!(),
+                            },
                             None => visitor.missing_field("name")?,
                         };
                         Ok(Expression::FunctionCall(name))
-                    }
+                    },
                     "num" => {
                         let val = match val {
-                            Some(val) => {
-                                match val {
-                                    ExpressionValue::String(v) => v,
-                                    ExpressionValue::Expression(_) => panic!(),
-                                }
-                            }
+                            Some(val) => match val {
+                                ExpressionValue::String(v) => v,
+                                ExpressionValue::Expression(_) => panic!(),
+                            },
                             None => visitor.missing_field("val")?,
                         };
                         Ok(Expression::Number(Number(val)))
-                    }
+                    },
                     "kv" => {
                         let name = match name {
-                            Some(name) => {
-                                match name {
-                                    ExpressionName::String(v) => v,
-                                    ExpressionName::Expression(_) => panic!(),
-                                }
-                            }
+                            Some(name) => match name {
+                                ExpressionName::String(v) => v,
+                                ExpressionName::Expression(_) => panic!(),
+                            },
                             None => visitor.missing_field("name")?,
                         };
                         let val = match val {
-                            Some(val) => {
-                                match val {
-                                    ExpressionValue::Expression(v) => v,
-                                    ExpressionValue::String(v) => Expression::Pattern(v),
-                                }
-                            }
+                            Some(val) => match val {
+                                ExpressionValue::Expression(v) => v,
+                                ExpressionValue::String(v) => {
+                                    Expression::Pattern(v)
+                                },
+                            },
                             None => visitor.missing_field("val")?,
                         };
                         Ok(Expression::KeyValueArgument {
                             name: name,
-                            val: Box::new(val),
+                            val: Box::new(val)
                         })
-                    }
+                    },
                     "mem" => {
                         let obj = match obj {
                             Some(obj) => obj,
@@ -566,9 +555,14 @@ impl Deserialize for Expression {
                             Some(k) => k,
                             None => visitor.missing_field("key")?,
                         };
-                        Ok(Expression::Member { obj: obj, key: k })
+                        Ok(Expression::Member {
+                            obj: obj,
+                            key: k
+                        })
+                    },
+                    _ => {
+                        panic!()
                     }
-                    _ => panic!(),
                 }
             }
         }
@@ -592,7 +586,7 @@ impl Serialize for PatternElement {
             &PatternElement::PlaceableElement(ref v) => {
                 let mut state = try!(serializer.serialize_seq(Some(v.len())));
                 for e in v {
-                    try!(serializer.serialize_seq_elt(&mut state, e));
+                  try!(serializer.serialize_seq_elt(&mut state, e));
                 }
                 serializer.serialize_seq_end(state)
             }
@@ -642,7 +636,7 @@ impl Serialize for Pattern {
             &Pattern::Complex(ref v) => {
                 let mut state = try!(serializer.serialize_seq(Some(v.len())));
                 for e in v {
-                    try!(serializer.serialize_seq_elt(&mut state, e));
+                  try!(serializer.serialize_seq_elt(&mut state, e));
                 }
                 serializer.serialize_seq_end(state)
             }

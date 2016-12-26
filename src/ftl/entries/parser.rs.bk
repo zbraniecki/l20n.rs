@@ -122,10 +122,10 @@ impl<'a> Parser<'a> {
             Some(&ch) => {
                 match ch {
                     '#' => {
-                        return self.get_comment();
+                      return self.get_comment();
                     }
                     '[' => {
-                        return self.get_section();
+                      return self.get_section();
                     }
                     _ => {}
                 }
@@ -200,14 +200,11 @@ impl<'a> Parser<'a> {
 
         match value {
             Pattern::Simple(_) => entries.insert(id, Value::Pattern(value)),
-            Pattern::Complex(_) => {
-                entries.insert(id,
-                               Value::ComplexValue {
-                                   val: Some(value),
-                                   traits: None,
-                                   def: None,
-                               })
-            }
+            Pattern::Complex(_) => entries.insert(id, Value::ComplexValue {
+                val: Some(value),
+                traits: None,
+                def: None
+            })
         };
     }
 
@@ -221,19 +218,19 @@ impl<'a> Parser<'a> {
                 Some(&c) => {
                     let mut ch = c;
                     if ch == '*' {
-                        self.bump();
-                        default_index = Some(index);
-                        match self.peek_char() {
-                            Some(&c2) => ch = c2,
-                            None => panic!(),
-                        }
+                      self.bump();
+                      default_index = Some(index);
+                      match self.peek_char() {
+                          Some(&c2) => ch = c2,
+                          None => panic!() 
+                      }
                     }
 
                     if ch != '[' || self.peek_char_eq('[') {
                         self.source.reset_peek();
                         break;
                     } else {
-                        self.bump();
+                      self.bump();
                     }
 
                     self.skip_line_ws(true);
@@ -254,7 +251,7 @@ impl<'a> Parser<'a> {
                     index += 1;
 
                     self.skip_ws()
-                }
+                },
                 None => break,
             }
         }
@@ -269,21 +266,21 @@ impl<'a> Parser<'a> {
         }
 
         loop {
-            match self.peek_char() {
-                Some(&ch) => {
-                    match ch {
-                        '\n' => {
-                            if !self.peek_char_eq('#') {
-                                self.source.reset_peek();
-                                break;
-                            }
-                            self.bump();
-                        }
-                        _ => self.bump(),
-                    }
+          match self.peek_char() {
+            Some(&ch) => match ch {
+              '\n' => {
+                if !self.peek_char_eq('#') {
+                  self.source.reset_peek();
+                  break;
                 }
-                None => break,
-            }
+                self.bump();
+              },
+              _ => {
+                self.bump()
+              },
+            },
+            None => break,
+          }
         }
     }
 
@@ -338,9 +335,9 @@ impl<'a> Parser<'a> {
             match self.peek_char() {
                 Some(&ch) if is_kw_char(ch) => name.push(ch),
                 _ => {
-                    self.source.reset_peek();
-                    break;
-                }
+                  self.source.reset_peek();
+                  break;
+                },
             }
 
             self.bump();
@@ -396,7 +393,7 @@ impl<'a> Parser<'a> {
                                 self.source.reset_peek();
                             }
                             continue;
-                        }
+                        },
                         '\\' => {
                             self.bump();
                             match self.peek_char() {
@@ -409,22 +406,26 @@ impl<'a> Parser<'a> {
                                 }
                                 None => {}
                             }
-                        }
+                        },
                         '"' => {
                             self.bump();
                             quote_delimited = false;
                             break;
-                        }
+                        },
                         '{' => {
                             if buffer.len() != 0 {
-                                content.push(PatternElement::TextElement(buffer.clone()));
+                                content.push(
+                                    PatternElement::TextElement(
+                                        buffer.clone()
+                                    )
+                                );
                             }
                             buffer.clear();
-
+                            
                             content.push(self.get_placeable());
 
                             continue;
-                        }
+                        },
                         _ => {
                             buffer.push(ch);
                         }
@@ -462,20 +463,18 @@ impl<'a> Parser<'a> {
             self.skip_line_ws(true);
 
             match self.peek_char() {
-                Some(&ch) => {
-                    match ch {
-                        '}' => {
-                            self.bump();
-                            break;
-                        }
-                        ',' => {
-                            self.bump();
-                            self.skip_ws();
-                        }
-                        _ => panic!(),
-                    }
-                }
-                None => panic!(),
+                Some(&ch) => match ch {
+                    '}' => {
+                        self.bump();
+                        break;
+                    },
+                    ',' => {
+                        self.bump();
+                        self.skip_ws();
+                    },
+                    _ => panic!(),
+                },
+              None => panic!(),
             }
         }
 
@@ -488,38 +487,36 @@ impl<'a> Parser<'a> {
         self.skip_line_ws(true);
 
         match self.peek_char() {
-            Some(&ch) => {
-                match ch {
-                    '-' => {
-                        if self.peek_char_eq('>') {
-                            self.bump();
-                            self.bump();
+            Some(&ch) => match ch {
+                '-' => {
+                    if self.peek_char_eq('>') {
+                        self.bump();
+                        self.bump();
 
 
-                            self.skip_line_ws(true);
+                        self.skip_line_ws(true);
 
-                            if !self.peek_char_eq('\n') {
-                                panic!();
-                            }
-
-                            self.skip_ws();
-
-                            let (members, default_index) = self.get_members();
-
-                            return Expression::SelectExpression {
-                                exp: Box::new(selector),
-                                vars: members,
-                                def: default_index,
-                            };
-                        } else {
-                            self.source.reset_peek()
+                        if !self.peek_char_eq('\n') {
+                            panic!();
                         }
+
+                        self.skip_ws();
+
+                        let (members, default_index) = self.get_members();
+
+                        return Expression::SelectExpression {
+                            exp: Box::new(selector),
+                            vars: members,
+                            def: default_index
+                        }
+                    } else {
+                        self.source.reset_peek()
                     }
-                    _ => {
-                        self.source.reset_peek();
-                    }
-                }
-            }
+                },
+                _ => {
+                    self.source.reset_peek();
+                },
+            },
             None => panic!(),
         }
 
@@ -547,7 +544,7 @@ impl<'a> Parser<'a> {
 
         Expression::CallExpression {
             name: Box::new(exp),
-            args: args,
+            args: args
         }
     }
 
@@ -558,48 +555,46 @@ impl<'a> Parser<'a> {
 
         loop {
             match self.peek_char() {
-                Some(&ch) => {
-                    match ch {
-                        ')' => {
-                            self.source.reset_peek();
-                            break;
-                        }
-                        ',' => {
+                Some(&ch) => match ch {
+                    ')' => {
+                        self.source.reset_peek();
+                        break;
+                    },
+                    ',' => {
+                        self.bump();
+                        self.skip_line_ws(true);
+                    },
+                    _ => {
+                        self.source.reset_peek();
+                        let exp = self.get_call_expression();
+
+                        self.skip_line_ws(true);
+
+
+                        if self.peek_char_eq(':') {
                             self.bump();
                             self.skip_line_ws(true);
-                        }
-                        _ => {
-                            self.source.reset_peek();
-                            let exp = self.get_call_expression();
 
-                            self.skip_line_ws(true);
+                            let val = self.get_call_expression();
 
-
-                            if self.peek_char_eq(':') {
-                                self.bump();
-                                self.skip_line_ws(true);
-
-                                let val = self.get_call_expression();
-
-                                match exp {
-                                    Expression::EntityReference(name) => {
-                                        args.push(Expression::KeyValueArgument {
-                                            name: name,
-                                            val: Box::new(val),
-                                        });
-                                    }
-                                    _ => {
-                                        panic!();
-                                    }
+                            match exp {
+                                Expression::EntityReference(name) => {
+                                    args.push(Expression::KeyValueArgument {
+                                        name: name,
+                                        val: Box::new(val)
+                                    });
+                                },
+                                _ => {
+                                    panic!();
                                 }
-                            } else {
-                                self.source.reset_peek();
-                                args.push(exp);
                             }
+                        } else {
+                            self.source.reset_peek();
+                            args.push(exp);
                         }
                     }
-                }
-                None => panic!(),
+                },
+                None => panic!()
             }
         }
 
@@ -617,35 +612,31 @@ impl<'a> Parser<'a> {
         }
 
         match self.peek_char() {
-            Some(&ch) => {
-                match ch {
-                    '0'...'9' => {
-                        num.push(ch);
-                        self.bump();
-                    }
-                    _ => panic!(),
-                }
-            }
+            Some(&ch) => match ch {
+                '0' ... '9' => {
+                    num.push(ch);
+                    self.bump();
+                },
+                _ => panic!(),
+            },
             None => panic!(),
         }
 
         loop {
             match self.peek_char() {
-                Some(&ch) => {
-                    match ch {
-                        '0'...'9' => {
-                            num.push(ch);
-                        }
-                        _ => {
-                            self.source.reset_peek();
-                            break;
-                        }
-                    }
-                }
+                Some(&ch) => match ch {
+                    '0' ... '9' => {
+                        num.push(ch);
+                    },
+                    _ => {
+                        self.source.reset_peek();
+                        break;
+                    },
+                },
                 None => {
                     self.source.reset_peek();
                     break;
-                }
+                },
             }
             self.bump();
         }
@@ -655,35 +646,31 @@ impl<'a> Parser<'a> {
             self.bump();
 
             match self.peek_char() {
-                Some(&ch) => {
-                    match ch {
-                        '0'...'9' => {
-                            num.push(ch);
-                            self.bump();
-                        }
-                        _ => panic!(),
-                    }
-                }
+                Some(&ch) => match ch {
+                    '0' ... '9' => {
+                        num.push(ch);
+                        self.bump();
+                    },
+                    _ => panic!(),
+                },
                 None => panic!(),
             }
 
             loop {
                 match self.peek_char() {
-                    Some(&ch) => {
-                        match ch {
-                            '0'...'9' => {
-                                num.push(ch);
-                            }
-                            _ => {
-                                self.source.reset_peek();
-                                break;
-                            }
-                        }
-                    }
+                    Some(&ch) => match ch {
+                        '0' ... '9' => {
+                            num.push(ch);
+                        },
+                        _ => {
+                            self.source.reset_peek();
+                            break;
+                        },
+                    },
                     None => {
                         self.source.reset_peek();
                         break;
-                    }
+                    },
                 }
                 self.bump();
             }
@@ -706,7 +693,7 @@ impl<'a> Parser<'a> {
 
                 exp = Expression::Member {
                     obj: Box::new(exp),
-                    key: keyword,
+                    key: keyword
                 }
             } else {
                 self.source.reset_peek();
@@ -718,51 +705,51 @@ impl<'a> Parser<'a> {
 
     fn get_member_key(&mut self) -> MemberKey {
         match self.peek_char() {
-            Some(&ch) => {
-                match ch {
-                    '0'...'9' | '-' => {
-                        let num = self.get_number();
-                        return MemberKey::Number(num);
-                    }
-                    _ => {
-                        return MemberKey::Keyword(self.get_keyword());
-                    }
+            Some(&ch) => match ch {
+                '0'...'9' | '-' => {
+                    let num = self.get_number();
+                    return MemberKey::Number(num);
+                },
+                _ => {
+                    return MemberKey::Keyword(self.get_keyword());
                 }
-            }
-            None => panic!(),
+            },
+            None => panic!()
         }
     }
 
     fn get_literal(&mut self) -> Expression {
         match self.peek_char() {
-            Some(&ch) => {
-                match ch {
-                    '0'...'9' | '-' => {
-                        self.source.reset_peek();
-                        return Expression::Number(self.get_number());
-                    }
-                    '"' => {
-                        self.source.reset_peek();
-                        let pat = self.get_pattern();
-                        match pat {
-                            Pattern::Simple(val) => {
-                                return Expression::Pattern(val);
-                            }
-                            _ => {
-                                panic!();
-                            }
+            Some(&ch) => match ch {
+                '0' ... '9' | '-' => {
+                    self.source.reset_peek();
+                    return Expression::Number(self.get_number());
+                },
+                '"' => {
+                    self.source.reset_peek();
+                    let pat = self.get_pattern();
+                    match pat {
+                        Pattern::Simple(val) => {
+                            return Expression::Pattern(val);
+                        },
+                        _ => {
+                            panic!();
                         }
                     }
-                    '$' => {
-                        self.bump();
-                        return Expression::ExternalArgument(self.get_identifier());
-                    }
-                    _ => {
-                        self.source.reset_peek();
-                        return Expression::EntityReference(self.get_identifier());
-                    }
+                },
+                '$' => {
+                    self.bump();
+                    return Expression::ExternalArgument(
+                        self.get_identifier()
+                    )
+                },
+                _ => {
+                    self.source.reset_peek();
+                    return Expression::EntityReference(
+                        self.get_identifier()
+                    )
                 }
-            }
+            },
             None => panic!(),
         }
     }
@@ -771,6 +758,6 @@ impl<'a> Parser<'a> {
     fn dump_ptr(&mut self) {
         println!("{:?}", self.peek_char().unwrap());
         self.source.reset_peek();
-        println!("{:?}", self.read_char().unwrap());
+        //println!("{:?}", self.read_char().unwrap());
     }
 }
