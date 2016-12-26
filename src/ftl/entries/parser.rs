@@ -196,8 +196,16 @@ impl<'a> Parser<'a> {
                 }
             }
             None => {}
-        }
-        entries.insert(id, Value::Pattern(value));
+        };
+
+        match value {
+            Pattern::Simple(_) => entries.insert(id, Value::Pattern(value)),
+            Pattern::Complex(_) => entries.insert(id, Value::ComplexValue {
+                val: Some(value),
+                traits: None,
+                def: None
+            })
+        };
     }
 
     fn get_members(&mut self) -> (Vec<Member>, Option<i8>) {

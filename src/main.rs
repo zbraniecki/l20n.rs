@@ -44,6 +44,7 @@ fn main() {
 
     let mut opts = Options::new();
     opts.optflag("s", "silence", "disable output");
+    opts.optflag("r", "raw", "print raw result");
     opts.optflag("h", "help", "print this help menu");
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => m,
@@ -69,7 +70,13 @@ fn main() {
         parser.parse()
     };
 
-    if !matches.opt_present("s") {
+    if matches.opt_present("s") {
+        return;
+    }
+
+    if matches.opt_present("r") {
+        println!("{:?}", &res);
+    } else {
         print_entries_resource(&res);
     }
 }
