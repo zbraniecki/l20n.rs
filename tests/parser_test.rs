@@ -37,8 +37,6 @@ fn entries_parser() {
             continue;
         }
 
-        println!("Comparing file: {}", path.to_str().unwrap());
-
         let path_len = path.to_str().unwrap().len();
         let entries_path = format!("{}.entries.json",
                                    &path.to_str().unwrap()[0..(path_len - 4)]);
@@ -50,6 +48,9 @@ fn entries_parser() {
         let res = parser.parse();
 
 
-        assert_eq!(reference_res, res, "Foo");
+        assert_eq!(reference_res,
+                   res.unwrap(),
+                   "File {} didn't match it's fixture",
+                   path.to_str().unwrap());
     }
 }

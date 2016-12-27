@@ -17,6 +17,12 @@ use std::io;
 
 use getopts::Options;
 
+#[derive(Debug)]
+enum CliError {
+    Deserialize(serde_json::Error),
+    Parse(self::ftl::entries::parser::ParserError),
+}
+
 fn read_file(path: &String) -> Result<String, io::Error> {
     let mut f = try!(File::open(path));
     let mut s = String::new();
@@ -27,10 +33,6 @@ fn read_file(path: &String) -> Result<String, io::Error> {
 fn print_entries_resource(res: &EntriesResource) {
     let e = serde_json::to_string_pretty(res).unwrap();
     println!("{}", e);
-}
-
-fn deserialize_json(source: &str) -> EntriesResource {
-    return serde_json::from_str(source).unwrap();
 }
 
 fn print_usage(program: &str, opts: Options) {
@@ -63,22 +65,27 @@ fn main() {
 
 
     let source = read_file(&input).expect("Read file failed");
-    let res = if input.contains(".json") {
-        deserialize_json(source.trim())
+    let res: Result<EntriesResource, CliError> = if input.contains(".json") {
+        serde_json::from_str(source.trim()).map_err(|err| CliError::Deserialize(err))
     } else {
         let mut parser = EntriesParser::new(source.trim());
-        parser.parse()
+        parser.parse().map_err(|err| CliError::Parse(err))
     };
 
     if matches.opt_present("s") {
         return;
     }
 
-    if matches.opt_present("r") {
-        println!("{:?}", &res);
-    } else {
-        print_entries_resource(&res);
-    }
+    match res {
+        Ok(res) => {
+            if matches.opt_present("r") {
+                println!("{:?}", &res);
+            } else {
+                print_entries_resource(&res);
+            }
+        }
+        Err(r) => println!("Error: {:?}", r),
+    };
 }
 
 pub mod ftl;

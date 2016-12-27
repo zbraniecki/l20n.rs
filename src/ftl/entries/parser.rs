@@ -29,6 +29,11 @@ fn is_kw_char(ch: char) -> bool {
     }
 }
 
+#[derive(Debug)]
+pub enum ParserError {
+    Generic,
+}
+
 
 pub struct Parser<'a> {
     source: MultiPeek<str::Chars<'a>>,
@@ -97,7 +102,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse(&mut self) -> Resource {
+    pub fn parse(&mut self) -> Result<Resource, ParserError> {
         let mut entries = Map::new();
 
         self.skip_ws();
@@ -114,7 +119,7 @@ impl<'a> Parser<'a> {
                 }
             }
         }
-        Resource(entries)
+        Ok(Resource(entries))
     }
 
     fn get_entry(&mut self, entries: &mut Map<String, Value>) {
